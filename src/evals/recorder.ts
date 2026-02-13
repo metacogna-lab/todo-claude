@@ -7,8 +7,7 @@ import type { VerificationResult } from "../schema/verification.js";
 import { loadEnv } from "../config/env.js";
 import { logger } from "../logging/logger.js";
 import type { ExecutionRunRecord, DetailSourceLink } from "../execution/store.js";
-import { CONTRACT_VERSION, TraceResponseSchema, EvalReportSchema } from "@assistant/contracts";
-import { assertSchema } from "@assistant/contracts";
+import { CONTRACT_VERSION, TraceResponseSchema, EvalReportSchema, assertSchema } from "@assistant/contracts";
 
 const snapshotBase = () => resolve(process.cwd(), loadEnv().EVALS_DIR ?? "data/evals");
 

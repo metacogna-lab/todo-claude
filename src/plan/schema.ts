@@ -19,6 +19,11 @@ export const TodoistCreateTaskAction = z.object({
   labels: z.array(z.string()).default([]),
 });
 
+export const TodoistCloseTaskAction = z.object({
+  type: z.literal("todoist.close_task"),
+  taskId: z.string().min(1),
+});
+
 export const LinearCreateIssueAction = z.object({
   type: z.literal("linear.create_issue"),
   teamId: z.string().min(1),
@@ -28,13 +33,26 @@ export const LinearCreateIssueAction = z.object({
   labels: z.array(z.string()).default([]),
 });
 
+export const LinearUpdateIssueAction = z.object({
+  type: z.literal("linear.update_issue"),
+  issueId: z.string().min(1),
+  patch: z.object({
+    stateId: z.string().optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+  }),
+});
+
 export const PlanAction = z.discriminatedUnion("type", [
   ObsidianUpsertAction,
   TodoistCreateTaskAction,
+  TodoistCloseTaskAction,
   LinearCreateIssueAction,
+  LinearUpdateIssueAction,
 ]);
 
 export const PlanSchema = z.object({
+  version: z.literal("1.0.0").default("1.0.0"),
   traceId: z.string().min(8),
   userIntent: z.string().min(1),
   assumptions: z.array(z.string()).default([]),

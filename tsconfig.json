@@ -2,7 +2,10 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "paths": {
+      "@assistant/contracts": ["packages/contracts/src"]
+    }
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

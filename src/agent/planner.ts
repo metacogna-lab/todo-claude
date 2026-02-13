@@ -1,5 +1,6 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { PlanSchema, type Plan } from "../plan/schema.js";
+import { CONTRACT_VERSION, PlanSchema as ContractPlanSchema, assertSchema } from "@assistant/contracts";
 import { logger } from "../logging/logger.js";
 import { loadEnv } from "../config/env.js";
 
@@ -129,6 +130,15 @@ export async function generatePlan(userText: string): Promise<Plan> {
     const issues = parsed.error.issues.map(i => `${i.path.join(".")}: ${i.message}`).join("; ");
     throw new Error(`Plan failed schema validation: ${issues}\nPlan: ${JSON.stringify(candidate, null, 2)}`);
   }
+
+  assertSchema(ContractPlanSchema, {
+    version: CONTRACT_VERSION,
+    traceId: parsed.data.traceId,
+    userIntent: parsed.data.userIntent,
+    assumptions: parsed.data.assumptions,
+    actions: parsed.data.actions,
+    receiptSummary: parsed.data.receiptSummary,
+  });
 
   return parsed.data;
 }
