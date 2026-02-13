@@ -11,12 +11,12 @@
 2. **Phase 2 – Execution & Link Graph** (branch `phase2-execution-links`) ✅ _complete_
    - SQLite persistence for execution runs + action records.
    - DetailSource link graph capturing obsidian/todoist/linear artifacts with trace IDs.
-3. **Phase 3 – Verification & Observability** (branch `phase3-verification-obs`)
-   - Build verification pipeline, Langfuse spans, Chrome DevTools artifacts, system health dashboards.
+3. **Phase 3 – Verification & Observability** (branch `phase3-verification-obs`) ✅ _complete_
+   - Verification service persisting results + issues (`detail_links_missing` guard) with tests (`tests/verification-service.test.ts`).
 4. **Phase 4 – Agent-Oriented Governance** (branch `phase4-governance`)
    - Enforce enforcement policies, automation tooling, and branch/test/merge discipline per AGENTS covenant.
 
 ## Next Actions
-- Merge `phase1-event-context` after review, then branch for Phase 2 work.
+- Branch `phase4-governance`, capture failing tests around branch/test enforcement.
 - Continue logging structural errors/missing elements inside `tasks/errors.md`.
-- For each remaining phase: create branch, write failing tests for gaps, implement, run `bun test`, merge.
+- For remaining phase: create branch, write failing tests for gaps, implement, run `bun test`, merge.

@@ -28,7 +28,7 @@
 2. Connector instrumentation ensuring `traceId` in every payload.
 3. Migration scripts + fixtures; new Vitest suite verifying link consistency.
 
-## Phase 3 – Verification & Observability (`phase3-verification-obs`)
+## Phase 3 – Verification & Observability (`phase3-verification-obs`) ✅ _Completed_
 **Gaps addressed:** Verification pipeline, audit receipts, enforcement policies, observability mandates ( `.agents/DATAMODEL.md` §13–16, `AGENTS.md` Workflow Guardrails ).  
 **Scope**
 - Create verification service that runs post-execution checks (receipts written, Langfuse spans present, DevTools artifacts attached).

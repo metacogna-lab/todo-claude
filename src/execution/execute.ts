@@ -5,6 +5,7 @@ import { ObsidianRest, ObsidianVault } from "../connectors/obsidian.js";
 import { TodoistClient } from "../connectors/todoist.js";
 import { LinearClient } from "../connectors/linear.js";
 import { logExecutionResult } from "./store.js";
+import { verifyExecution } from "../verification/service.js";
 
 function isoLooksDateOnly(s: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -148,11 +149,12 @@ export async function executePlan(plan: Plan): Promise<ExecutionResult> {
   // Validate result shape (useful for downstream reporting/tests)
   const parsed = ExecutionResultSchema.parse(result);
   const finishedAt = new Date().toISOString();
-  await logExecutionResult({
+  const run = await logExecutionResult({
     plan,
     result: parsed,
     startedAt,
     finishedAt,
   });
+  await verifyExecution(parsed.traceId, run.id);
   return parsed;
 }

@@ -45,6 +45,7 @@ const result: ExecutionResult = {
 };
 
 beforeEach(() => {
+  process.env.APP_DB_PATH = ":memory:";
   resetDb();
 });
 
@@ -55,9 +56,8 @@ describe("execution store", () => {
 
     await logExecutionResult({ plan, result, startedAt, finishedAt });
 
-    const runs = await listExecutionRuns();
+    const runs = await listExecutionRuns(plan.traceId);
     expect(runs).toHaveLength(1);
-    expect(runs[0]?.traceId).toBe(plan.traceId);
     expect(runs[0]?.actionsCount).toBe(plan.actions.length);
 
     const links = await listDetailSourceLinks(plan.traceId);

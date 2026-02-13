@@ -54,6 +54,16 @@ function init(db: Database) {
       metadata TEXT,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS verification_results (
+      id TEXT PRIMARY KEY,
+      trace_id TEXT NOT NULL,
+      run_id TEXT NOT NULL,
+      status TEXT NOT NULL,
+      issues TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(run_id) REFERENCES execution_runs(id)
+    );
   `);
 }
 
