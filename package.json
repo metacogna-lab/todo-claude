@@ -16,11 +16,12 @@
     "start": "node dist/index.js",
     "lint": "eslint .",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "worktrees:launch": "bun scripts/launch-worktrees.ts"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.0.0",
-    "@graphql-yoga/node": "^5.6.0",
+    "@anthropic-ai/claude-agent-sdk": "^0.2.41",
+    "@graphql-yoga/node": "^3.9.1",
     "graphql": "^16.8.1",
     "langfuse": "^3.0.0",
     "zod": "^3.23.8",
