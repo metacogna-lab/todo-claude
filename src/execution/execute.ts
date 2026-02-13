@@ -4,6 +4,7 @@ import { defaultLabels, globalTags, isDryRun, loadEnv } from "../config/env.js";
 import { ObsidianRest, ObsidianVault } from "../connectors/obsidian.js";
 import { TodoistClient } from "../connectors/todoist.js";
 import { LinearClient } from "../connectors/linear.js";
+import { logExecutionResult } from "./store.js";
 
 function isoLooksDateOnly(s: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -19,6 +20,7 @@ function resolveDefaults(plan: Plan) {
 }
 
 export async function executePlan(plan: Plan): Promise<ExecutionResult> {
+  const startedAt = new Date().toISOString();
   const env = loadEnv();
   const dryRun = isDryRun(env);
   const defaults = resolveDefaults(plan);
@@ -144,5 +146,13 @@ export async function executePlan(plan: Plan): Promise<ExecutionResult> {
   }
 
   // Validate result shape (useful for downstream reporting/tests)
-  return ExecutionResultSchema.parse(result);
+  const parsed = ExecutionResultSchema.parse(result);
+  const finishedAt = new Date().toISOString();
+  await logExecutionResult({
+    plan,
+    result: parsed,
+    startedAt,
+    finishedAt,
+  });
+  return parsed;
 }

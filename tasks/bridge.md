@@ -8,9 +8,9 @@
 1. **Phase 1 – Event & Context Foundation** (branch `phase1-event-context`) ✅ _complete_
    - Bun-native SQLite store for `EventEnvelope` + planning context snapshots.
    - Tests covering ingestion + context rebuild flows (`tests/event-ingestion.test.ts`).
-2. **Phase 2 – Execution & Link Graph** (branch `phase2-execution-links`)
-   - Model execution graph, action records, and DetailSource link graph.
-   - Ensure receipts + trace IDs sync across Obsidian, Todoist, Linear.
+2. **Phase 2 – Execution & Link Graph** (branch `phase2-execution-links`) ✅ _complete_
+   - SQLite persistence for execution runs + action records.
+   - DetailSource link graph capturing obsidian/todoist/linear artifacts with trace IDs.
 3. **Phase 3 – Verification & Observability** (branch `phase3-verification-obs`)
    - Build verification pipeline, Langfuse spans, Chrome DevTools artifacts, system health dashboards.
 4. **Phase 4 – Agent-Oriented Governance** (branch `phase4-governance`)

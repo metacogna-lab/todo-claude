@@ -16,7 +16,7 @@
 **Definition of done**
 - Branch merged after `bun test` passes and docs updated.
 
-## Phase 2 – Execution & Link Graph (`phase2-execution-links`)
+## Phase 2 – Execution & Link Graph (`phase2-execution-links`) ✅ _Completed_
 **Gaps addressed:** Execution graph, ActionExecutionRecords, DetailSource link graph ( `.agents/DATAMODEL.md` §§7–12 ).  
 **Scope**
 - Persist `ExecutionRun`, `ActionExecutionRecord`, and `DetailSourceArtifact` entities.

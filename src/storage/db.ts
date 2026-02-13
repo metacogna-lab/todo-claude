@@ -25,6 +25,35 @@ function init(db: Database) {
       snapshot TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS execution_runs (
+      id TEXT PRIMARY KEY,
+      trace_id TEXT NOT NULL,
+      plan_user_intent TEXT NOT NULL,
+      started_at TEXT NOT NULL,
+      finished_at TEXT NOT NULL,
+      summary TEXT,
+      actions_count INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS action_records (
+      id TEXT PRIMARY KEY,
+      run_id TEXT NOT NULL,
+      action_type TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      status TEXT NOT NULL,
+      FOREIGN KEY(run_id) REFERENCES execution_runs(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS detail_source_links (
+      id TEXT PRIMARY KEY,
+      trace_id TEXT NOT NULL,
+      source_type TEXT NOT NULL,
+      external_id TEXT NOT NULL,
+      uri TEXT,
+      metadata TEXT,
+      created_at TEXT NOT NULL
+    );
   `);
 }
 
