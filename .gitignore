@@ -36,3 +36,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # internal git metadata directory for sandboxed setup
 .gitdata/
+
+# local git worktrees
+worktrees/
