@@ -1,0 +1,3 @@
+UV tooling reminders:
+- Always lock dependencies with `uv pip compile`.
+- Reference Langfuse env vars from secrets manager, never inline.

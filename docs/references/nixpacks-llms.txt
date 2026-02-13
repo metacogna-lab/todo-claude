@@ -1,0 +1,3 @@
+Nixpacks build prompts for LLMs:
+- Use pinned nixpkgs channel.
+- Include nodejs + bun runtimes; prefer cached artifacts.

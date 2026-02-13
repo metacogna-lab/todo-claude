@@ -1,0 +1,3 @@
+Guardrails for LLMs referencing the design system:
+- Always cite component tokens from DESIGN.md.
+- Encode layout decisions as constraints, not free-form prose.

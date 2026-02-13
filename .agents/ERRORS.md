@@ -1,0 +1,1 @@
+***Agents*** will append all errors ***per phase*** into this file and maintain a lock on errors as well as often reviewing them.
