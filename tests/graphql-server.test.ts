@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildGraphQLServer } from "../src/graphql/server.js";
 import { taskRegistry } from "../src/services/taskRegistry.js";
 import { resetMetrics } from "../src/observability/monitoring.js";
@@ -38,6 +38,10 @@ vi.mock("../src/services/claudeCapture.js", () => {
   return {
     runClaudeCapture: vi.fn(async () => mockResult),
   };
+});
+
+afterAll(() => {
+  vi.resetModules();
 });
 
 async function graphqlRequest(server: ReturnType<typeof buildGraphQLServer>, query: string, variables?: Record<string, unknown>) {
