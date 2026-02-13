@@ -7,6 +7,7 @@ import { LinearClient } from "../connectors/linear.js";
 import { logExecutionResult, listDetailSourceLinks } from "./store.js";
 import { verifyExecution } from "../verification/service.js";
 import { recordEvaluationSnapshot } from "../evals/recorder.js";
+import { assertSchema, ExecutionRunSchema as ContractExecutionRunSchema, LinkGraphSchema as ContractLinkGraphSchema } from "@assistant/contracts";
 
 function isoLooksDateOnly(s: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(s);
