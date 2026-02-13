@@ -28,4 +28,10 @@ describe("GraphQL schema parity", () => {
     const fieldNames = Object.keys((inputType as GraphQLInputObjectType).getFields()).sort();
     expect(fieldNames).toEqual(["dryRun", "labels", "text"]);
   });
+
+  it("exposes CodeEdit skill mutations", () => {
+    const mutationType = schema.getType("Mutation") as GraphQLObjectType;
+    const fields = mutationType.getFields();
+    expect(fields.previewEdits).toBeDefined();
+  });
 });

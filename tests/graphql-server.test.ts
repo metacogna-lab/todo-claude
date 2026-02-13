@@ -3,6 +3,7 @@ import { buildGraphQLServer } from "../src/graphql/server.js";
 import { taskRegistry } from "../src/services/taskRegistry.js";
 import { resetMetrics } from "../src/observability/monitoring.js";
 import * as ClaudeCaptureService from "../src/services/claudeCapture.js";
+import * as WebSearchPlugin from "../src/plugins/webSearch.js";
 
 const mockResult = {
   plan: {
@@ -129,5 +130,51 @@ describe("GraphQL server", () => {
     expect(response.data.captureWithClaude.plan.traceId).toBe("trace-mock");
     expect(response.data.captureWithClaude.receipt.notePath).toBe("Projects/Demo.md");
     expect(runClaudeCaptureSpy).toHaveBeenCalledWith({ text: "Ship release", writeReceipt: true });
+  });
+
+  it("supports webSearchResults query when plugin enabled", async () => {
+    const server = buildGraphQLServer();
+    const spy = vi.spyOn(WebSearchPlugin, "webSearch").mockResolvedValue({
+      query: "bun js",
+      answer: "Bun is a fast all-in-one JavaScript runtime",
+      results: [
+        { title: "Bun", url: "https://bun.sh", content: "Bun is a fast JavaScript runtime" },
+      ],
+    });
+    const query = /* GraphQL */ `
+      query Search($query: String!) {
+        webSearch(query: $query) {
+          query
+          answer
+          results {
+            title
+            url
+          }
+        }
+      }
+    `;
+    const res = await graphqlRequest(server, query, { query: "bun js" });
+    expect(res.errors).toBeUndefined();
+    expect(res.data.webSearch.query).toBe("bun js");
+    expect(res.data.webSearch.results[0].url).toContain("bun.sh");
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it("supports previewEdits without applying changes", async () => {
+    const server = buildGraphQLServer();
+    const query = /* GraphQL */ `
+      mutation Preview($input: PreviewEditsInput!) {
+        previewEdits(input: $input) {
+          edits {
+            path
+            diff
+          }
+        }
+      }
+    `;
+    const variables = { input: { instructions: "Add a heading", files: ["README.md"] } };
+    const response = await graphqlRequest(server, query, variables);
+    expect(response.errors).toBeUndefined();
+    expect(response.data.previewEdits.edits).toBeInstanceOf(Array);
   });
 });

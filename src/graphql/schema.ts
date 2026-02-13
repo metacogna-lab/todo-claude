@@ -6,6 +6,8 @@ import { captureThought } from "../services/captureThought.js";
 import { runClaudeCapture } from "../services/claudeCapture.js";
 import type { IntegrationProfile, Task } from "../schema/index.js";
 import type { Plan } from "../plan/schema.js";
+import { webSearch } from "../plugins/webSearch.js";
+import { previewEdits } from "../skills/codePreview.js";
 
 const typeDefs = /* GraphQL */ `
   enum TaskStatus {
@@ -153,15 +155,42 @@ const typeDefs = /* GraphQL */ `
     receipt: ReceiptInfo
   }
 
+  type WebSearchResult {
+    query: String!
+    answer: String
+    results: [WebSearchSnippet!]!
+  }
+
+  type WebSearchSnippet {
+    title: String!
+    url: String!
+  }
+
+  input PreviewEditsInput {
+    instructions: String!
+    files: [String!]
+  }
+
+  type PreviewEditsPayload {
+    edits: [CodeEditSnippet!]!
+  }
+
+  type CodeEditSnippet {
+    path: String!
+    diff: String!
+  }
+
   type Query {
     health: HealthSnapshot!
     integrationProfile: IntegrationProfile!
     tasks: [Task!]!
+    webSearch(query: String!): WebSearchResult!
   }
 
   type Mutation {
     captureThought(input: CaptureThoughtInput!): CaptureThoughtPayload!
     captureWithClaude(input: CaptureWithClaudeInput!): CaptureWithClaudePayload!
+    previewEdits(input: PreviewEditsInput!): PreviewEditsPayload!
   }
 `;
 
@@ -170,6 +199,9 @@ const resolvers = {
     health: () => summarizeHealth(),
     integrationProfile: (): IntegrationProfile => deriveIntegrationProfile(),
     tasks: (): Task[] => taskRegistry.list(),
+    webSearch: async (_parent: unknown, args: { query: string }) => {
+      return webSearch(args.query);
+    },
   },
   Mutation: {
     captureThought: async (_parent: unknown, args: { input: { text: string; labels?: string[]; dryRun?: boolean } }) => {
@@ -177,6 +209,9 @@ const resolvers = {
     },
     captureWithClaude: async (_parent: unknown, args: { input: { text: string; writeReceipt?: boolean } }) => {
       return runClaudeCapture(args.input);
+    },
+    previewEdits: async (_parent: unknown, args: { input: { instructions: string; files?: string[] } }) => {
+      return previewEdits(args.input);
     },
   },
   PlanAction: {
