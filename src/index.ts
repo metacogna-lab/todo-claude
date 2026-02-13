@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { captureWorkflow } from "./workflows/capture.js";
 import { logger } from "./logging/logger.js";
+import { startGraphQLServer } from "./graphql/server.js";
 
 const program = new Command();
 
@@ -31,6 +32,14 @@ program
       return;
     }
     logger.info("Env looks OK. Next: configure OBSIDIAN_VAULT_PATH, TODOIST_API_TOKEN, LINEAR_API_TOKEN.");
+  });
+
+program
+  .command("api")
+  .description("Start the GraphQL API server")
+  .option("-p, --port <port>", "Port to bind", "4000")
+  .action(async (options: { port: string }) => {
+    await startGraphQLServer(Number(options.port));
   });
 
 await program.parseAsync(process.argv);

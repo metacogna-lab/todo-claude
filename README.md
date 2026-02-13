@@ -15,27 +15,33 @@ Why this pattern?
 - It also makes it easy to add CI tests that validate planning output.
 
 ## Requirements
-- Node 20+
+- Bun 1.1+
 - Obsidian vault on disk (recommended) OR an Obsidian REST plugin endpoint
 - API tokens for Todoist and Linear
 - `ANTHROPIC_API_KEY` for the Agent SDK
 
 ## Install
 ```bash
-pnpm i   # or bun i / npm i
+bun install
 cp .env.example .env
 ```
 
 ## Run
 ### 1) Capture a thought / request
 ```bash
-pnpm dev capture "Draft the Q1 roadmap. Tasks to Todoist, feature tickets to Linear, and a note in Obsidian."
+bun run dev capture "Draft the Q1 roadmap. Tasks to Todoist, feature tickets to Linear, and a note in Obsidian."
 ```
 
 ### 2) Dry-run (no writes)
 ```bash
-DRY_RUN=true pnpm dev capture "Book flights for April and track as a checklist."
+DRY_RUN=true bun run dev capture "Book flights for April and track as a checklist."
 ```
+
+### 3) GraphQL API (services surface)
+```bash
+bun run dev:api -- --port 4000
+```
+Then query `http://localhost:4000/graphql` for tasks, health snapshots, or to run `captureThought` mutations.
 
 ## What gets created
 - **Obsidian**
@@ -60,4 +66,3 @@ DRY_RUN=true pnpm dev capture "Book flights for April and track as a checklist."
 ## References
 - Claude Agent SDK overview and TypeScript API reference.   (See official docs and options like `outputFormat` and `mcpServers`.) 
 - Todoist REST v2 docs, Linear GraphQL docs.
-

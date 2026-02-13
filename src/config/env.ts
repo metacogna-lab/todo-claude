@@ -17,6 +17,10 @@ const EnvSchema = z.object({
   LINEAR_DEFAULT_TEAM_ID: z.string().optional(),
   LINEAR_DEFAULT_ASSIGNEE_ID: z.string().optional(),
 
+  LANGFUSE_PUBLIC_KEY: z.string().optional(),
+  LANGFUSE_SECRET_KEY: z.string().optional(),
+  LANGFUSE_HOST: z.string().url().optional(),
+
   DRY_RUN: z.string().optional(),
   RECEIPTS_FOLDER: z.string().optional(),
   GLOBAL_TAGS: z.string().optional(),
