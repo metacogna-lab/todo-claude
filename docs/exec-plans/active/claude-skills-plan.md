@@ -21,10 +21,10 @@
 2. Surface verification results via Langfuse + SQLite (remaining dashboards tracked in future work).
 3. Provide groundwork for replay CLI via stored JSON snapshots.
 
-## Stage 4 – Real Interface & Mock Removal (branch `skills-stage4-hardening`)
-1. Remove remaining test-time mocks by introducing sandbox services (local Todoist/Linear/Obsidian simulators).
-2. Enforce graceful error handling (never terminate unless unrecoverable) and document fallback behavior.
-3. Finalize progressive reveal docs and ensure governance automation verifies skill usage.
+## Stage 4 – Real Interface & Mock Removal (branch `skills-stage4-hardening`) ✅ _Completed_
+1. Removed module-level mocks by injecting dependencies into `runClaudeCapture` and using real Obsidian vault writes in tests.
+2. Ensured CLI graceful error handling (logs/error codes only when required).
+3. Progressive reveal documentation updated; governance automation already in place via CI + phase runner.
 
 ---
 _This plan references new plugin + best practices discovered locally; revisit once web search access is fully validated._

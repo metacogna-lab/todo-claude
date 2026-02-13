@@ -42,4 +42,9 @@ program
     await startGraphQLServer(Number(options.port));
   });
 
-await program.parseAsync(process.argv);
+try {
+  await program.parseAsync(process.argv);
+} catch (error) {
+  logger.error({ err: error }, "CLI command failed");
+  if (!process.exitCode) process.exitCode = 1;
+}

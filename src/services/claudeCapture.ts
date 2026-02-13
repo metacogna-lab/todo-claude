@@ -25,15 +25,31 @@ export type ClaudeCaptureResult = {
   receipt: ReceiptWriteResult | null;
 };
 
-export async function runClaudeCapture(options: ClaudeCaptureOptions): Promise<ClaudeCaptureResult> {
+type ClaudeCaptureDeps = {
+  generatePlan: typeof generatePlan;
+  executePlan: typeof executePlan;
+  writeReceipt: (plan: Plan, execution: ExecutionResult, env: Env) => Promise<ReceiptWriteResult | null>;
+};
+
+const defaultDeps: ClaudeCaptureDeps = {
+  generatePlan,
+  executePlan,
+  writeReceipt: maybeWriteReceipt,
+};
+
+export async function runClaudeCapture(
+  options: ClaudeCaptureOptions,
+  deps: Partial<ClaudeCaptureDeps> = {}
+): Promise<ClaudeCaptureResult> {
   const env = loadEnv();
-  const plan = await generatePlan(options.text);
-  const execution = await executePlan(plan);
-  const receipt = options.writeReceipt === false ? null : await maybeWriteReceipt(plan, execution, env);
+  const merged = { ...defaultDeps, ...deps };
+  const plan = await merged.generatePlan(options.text);
+  const execution = await merged.executePlan(plan);
+  const receipt = options.writeReceipt === false ? null : await merged.writeReceipt(plan, execution, env);
   return { plan, execution, receipt };
 }
 
-async function maybeWriteReceipt(plan: Plan, execution: ExecutionResult, env: Env): Promise<ReceiptWriteResult | null> {
+export async function maybeWriteReceipt(plan: Plan, execution: ExecutionResult, env: Env): Promise<ReceiptWriteResult | null> {
   const noteAction = plan.actions.find(action => action.type === "obsidian.upsert_note");
   if (!noteAction) {
     logger.warn({ traceId: plan.traceId }, "No Obsidian note action in plan; skipping receipt write");
