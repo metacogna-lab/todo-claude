@@ -24,7 +24,7 @@ program
   .command("doctor")
   .description("Validate environment configuration and show quick hints.")
   .action(async () => {
-    const required = ["ANTHROPIC_API_KEY"];
+    const required = ["OPENAI_API_KEY"];
     const missing = required.filter(k => !process.env[k]);
     if (missing.length) {
       logger.error({ missing }, "Missing required env vars");

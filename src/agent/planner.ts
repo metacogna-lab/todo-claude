@@ -102,7 +102,7 @@ export async function generatePlan(userText: string): Promise<Plan> {
   const q = query({
     prompt: userText,
     options: {
-      model: env.CLAUDE_MODEL,
+      model: env.OPENAI_MODEL,
       systemPrompt: system,
       allowedTools: [],
       outputFormat: { type: "json_schema", schema: jsonSchema }

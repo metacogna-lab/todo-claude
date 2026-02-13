@@ -2,8 +2,8 @@ import "dotenv/config";
 import { z } from "zod";
 
 const EnvSchema = z.object({
-  ANTHROPIC_API_KEY: z.string().min(1),
-  CLAUDE_MODEL: z.string().optional(),
+  OPENAI_API_KEY: z.string().min(1),
+  OPENAI_MODEL: z.string().optional(),
 
   OBSIDIAN_VAULT_PATH: z.string().optional(),
   OBSIDIAN_REST_URL: z.string().url().optional(),
@@ -34,7 +34,10 @@ export function loadEnv(): Env {
     const issues = parsed.error.issues.map(i => `${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Invalid environment configuration:\n${issues}`);
   }
-  return parsed.data;
+  const data = parsed.data;
+  process.env.OPENAI_API_KEY = data.OPENAI_API_KEY;
+  if (data.OPENAI_MODEL) process.env.OPENAI_MODEL = data.OPENAI_MODEL;
+  return data;
 }
 
 export function isDryRun(env: Env): boolean {

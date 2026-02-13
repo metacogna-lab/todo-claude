@@ -18,7 +18,7 @@ Why this pattern?
 - Bun 1.1+
 - Obsidian vault on disk (recommended) OR an Obsidian REST plugin endpoint
 - API tokens for Todoist and Linear
-- `ANTHROPIC_API_KEY` for the Agent SDK
+- `OPENAI_API_KEY` for LLM planning
 
 ## Install
 ```bash

@@ -56,7 +56,7 @@ const originalEnv = { ...process.env };
 
 describe("runClaudeCapture", () => {
   beforeEach(() => {
-    process.env = { ...originalEnv, ANTHROPIC_API_KEY: "test-key" };
+    process.env = { ...originalEnv, OPENAI_API_KEY: "test-key" };
     obsidianUpsertMock.mockClear();
     generatePlanMock.mockResolvedValue(samplePlan);
     executePlanMock.mockResolvedValue(sampleExecution);
