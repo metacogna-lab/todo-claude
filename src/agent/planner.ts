@@ -89,9 +89,9 @@ export async function generatePlan(userText: string): Promise<Plan> {
     "6) Add tags/labels if the user hints at projects; otherwise keep it minimal.",
     "",
     "When you need defaults you don't know (e.g., Linear teamId), still produce the action with placeholders:",
-    "- teamId: "__DEFAULT_TEAM__"",
-    "- projectId: "__DEFAULT_PROJECT__"",
-    "- assigneeId: "__DEFAULT_ASSIGNEE__"",
+    "- teamId: \"__DEFAULT_TEAM__\"",
+    "- projectId: \"__DEFAULT_PROJECT__\"",
+    "- assigneeId: \"__DEFAULT_ASSIGNEE__\"",
     "",
     "Never invent credentials. Never include secrets."
   ].join("\n");

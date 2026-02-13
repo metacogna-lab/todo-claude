@@ -10,8 +10,8 @@
     "bun": ">=1.1.0"
   },
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "dev:api": "tsx src/graphql/server.ts",
+    "dev": "bun src/index.ts",
+    "dev:api": "bun src/graphql/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "lint": "eslint .",
