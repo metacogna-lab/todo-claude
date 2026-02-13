@@ -43,6 +43,17 @@ bun run dev:api -- --port 4000
 ```
 Then query `http://localhost:4000/graphql` for tasks, health snapshots, or to run `captureThought` mutations.
 
+Example mutation that goes end-to-end through Claude planning + execution:
+```graphql
+mutation {
+  captureWithClaude(input: { text: "Draft roadmap and sync tools" }) {
+    plan { traceId receiptSummary }
+    execution { warnings }
+    receipt { notePath written }
+  }
+}
+```
+
 ## What gets created
 - **Obsidian**
   - Upserts a note (by path) with summary + structured sections

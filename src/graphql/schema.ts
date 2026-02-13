@@ -3,7 +3,9 @@ import { taskRegistry } from "../services/taskRegistry.js";
 import { deriveIntegrationProfile } from "../services/integrationProfile.js";
 import { summarizeHealth } from "../observability/monitoring.js";
 import { captureThought } from "../services/captureThought.js";
+import { runClaudeCapture } from "../services/claudeCapture.js";
 import type { IntegrationProfile, Task } from "../schema/index.js";
+import type { Plan } from "../plan/schema.js";
 
 const typeDefs = /* GraphQL */ `
   enum TaskStatus {
@@ -57,6 +59,100 @@ const typeDefs = /* GraphQL */ `
     traceId: String!
   }
 
+  interface PlanAction {
+    type: String!
+  }
+
+  type ObsidianUpsertPlanAction implements PlanAction {
+    type: String!
+    notePath: String!
+    title: String!
+    markdown: String!
+    tags: [String!]!
+  }
+
+  type TodoistCreateTaskPlanAction implements PlanAction {
+    type: String!
+    content: String!
+    description: String
+    due: String
+    priority: Int
+    projectId: String
+    labels: [String!]!
+  }
+
+  type LinearCreateIssuePlanAction implements PlanAction {
+    type: String!
+    teamId: String!
+    title: String!
+    description: String
+    assigneeId: String
+    labels: [String!]!
+  }
+
+  type Plan {
+    traceId: String!
+    userIntent: String!
+    assumptions: [String!]!
+    actions: [PlanAction!]!
+    receiptSummary: String!
+  }
+
+  type ObsidianNoteMutation {
+    notePath: String!
+    uri: String
+  }
+
+  type TodoistCreatedTask {
+    id: ID!
+    content: String!
+    url: String
+  }
+
+  type LinearCreatedIssue {
+    id: ID!
+    title: String!
+    url: String
+  }
+
+  type ExecutionObsidianResult {
+    updatedNotes: [ObsidianNoteMutation!]!
+  }
+
+  type ExecutionTodoistResult {
+    createdTasks: [TodoistCreatedTask!]!
+  }
+
+  type ExecutionLinearResult {
+    createdIssues: [LinearCreatedIssue!]!
+  }
+
+  type ExecutionResult {
+    traceId: String!
+    obsidian: ExecutionObsidianResult!
+    todoist: ExecutionTodoistResult!
+    linear: ExecutionLinearResult!
+    warnings: [String!]!
+  }
+
+  type ReceiptInfo {
+    notePath: String!
+    receiptMarkdown: String!
+    finalMarkdown: String!
+    written: Boolean!
+  }
+
+  input CaptureWithClaudeInput {
+    text: String!
+    writeReceipt: Boolean
+  }
+
+  type CaptureWithClaudePayload {
+    plan: Plan!
+    execution: ExecutionResult!
+    receipt: ReceiptInfo
+  }
+
   type Query {
     health: HealthSnapshot!
     integrationProfile: IntegrationProfile!
@@ -65,6 +161,7 @@ const typeDefs = /* GraphQL */ `
 
   type Mutation {
     captureThought(input: CaptureThoughtInput!): CaptureThoughtPayload!
+    captureWithClaude(input: CaptureWithClaudeInput!): CaptureWithClaudePayload!
   }
 `;
 
@@ -77,6 +174,17 @@ const resolvers = {
   Mutation: {
     captureThought: async (_parent: unknown, args: { input: { text: string; labels?: string[]; dryRun?: boolean } }) => {
       return captureThought(args.input);
+    },
+    captureWithClaude: async (_parent: unknown, args: { input: { text: string; writeReceipt?: boolean } }) => {
+      return runClaudeCapture(args.input);
+    },
+  },
+  PlanAction: {
+    __resolveType(obj: Plan["actions"][number]) {
+      if (obj.type === "obsidian.upsert_note") return "ObsidianUpsertPlanAction";
+      if (obj.type === "todoist.create_task") return "TodoistCreateTaskPlanAction";
+      if (obj.type === "linear.create_issue") return "LinearCreateIssuePlanAction";
+      return null;
     },
   },
 };
