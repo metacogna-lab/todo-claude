@@ -14,9 +14,9 @@
 3. **Phase 3 – Verification & Observability** (branch `phase3-verification-obs`) ✅ _complete_
    - Verification service persisting results + issues (`detail_links_missing` guard) with tests (`tests/verification-service.test.ts`).
 4. **Phase 4 – Agent-Oriented Governance** (branch `phase4-governance`)
-   - Enforce enforcement policies, automation tooling, and branch/test/merge discipline per AGENTS covenant.
+   - Enforce enforcement policies, automation tooling, CI checks, and branch/test/merge discipline per AGENTS covenant.
 
 ## Next Actions
-- Branch `phase4-governance`, capture failing tests around branch/test enforcement.
+- Track governance implementation under `docs/product-specs/governance-phase4.md`.
 - Continue logging structural errors/missing elements inside `tasks/errors.md`.
 - For remaining phase: create branch, write failing tests for gaps, implement, run `bun test`, merge.
