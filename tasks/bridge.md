@@ -13,6 +13,7 @@
    - DetailSource link graph capturing obsidian/todoist/linear artifacts with trace IDs.
 3. **Phase 3 – Verification & Observability** (branch `phase3-verification-obs`) ✅ _complete_
    - Verification service persisting results + issues (`detail_links_missing` guard) with tests (`tests/verification-service.test.ts`).
+   - Evaluation snapshots recorded to `data/evals` via `recordEvaluationSnapshot`.
 4. **Phase 4 – Agent-Oriented Governance** (branch `phase4-governance`)
    - Enforce enforcement policies, automation tooling, CI checks, and branch/test/merge discipline per AGENTS covenant.
 

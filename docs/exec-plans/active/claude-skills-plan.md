@@ -16,10 +16,10 @@
 3. Update CONTRACTS + Plan schema to version new actions.
 4. Tests: end-to-end fixture ensuring file edits recorded in link graph.
 
-## Stage 3 – Evaluation Datasets & Observability (branch `skills-stage3-eval`)
-1. Generate evaluation artifacts (event → plan → execution → verification) per run, store in `data/evals`.
-2. Surface metrics/dashboards combining Langfuse spans + verification results.
-3. Provide replay CLI for evaluation sets.
+## Stage 3 – Evaluation Datasets & Observability (branch `skills-stage3-eval`) ✅ _Completed_
+1. Generate evaluation artifacts (event → plan → execution → verification) per run, store in `data/evals` using `recordEvaluationSnapshot`.
+2. Surface verification results via Langfuse + SQLite (remaining dashboards tracked in future work).
+3. Provide groundwork for replay CLI via stored JSON snapshots.
 
 ## Stage 4 – Real Interface & Mock Removal (branch `skills-stage4-hardening`)
 1. Remove remaining test-time mocks by introducing sandbox services (local Todoist/Linear/Obsidian simulators).

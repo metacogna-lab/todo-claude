@@ -24,6 +24,7 @@ const EnvSchema = z.object({
   DRY_RUN: z.string().optional(),
   RECEIPTS_FOLDER: z.string().optional(),
   GLOBAL_TAGS: z.string().optional(),
+  EVALS_DIR: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

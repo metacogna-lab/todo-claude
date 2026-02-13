@@ -6,6 +6,7 @@ import { TodoistClient } from "../connectors/todoist.js";
 import { LinearClient } from "../connectors/linear.js";
 import { logExecutionResult } from "./store.js";
 import { verifyExecution } from "../verification/service.js";
+import { recordEvaluationSnapshot } from "../evals/recorder.js";
 
 function isoLooksDateOnly(s: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -155,6 +156,7 @@ export async function executePlan(plan: Plan): Promise<ExecutionResult> {
     startedAt,
     finishedAt,
   });
-  await verifyExecution(parsed.traceId, run.id);
+  const verification = await verifyExecution(parsed.traceId, run.id);
+  await recordEvaluationSnapshot({ plan, execution: parsed, verification });
   return parsed;
 }
