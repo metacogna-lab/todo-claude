@@ -4,6 +4,17 @@ import { taskRegistry } from "../src/services/taskRegistry.js";
 import { resetMetrics } from "../src/observability/monitoring.js";
 import * as ClaudeCaptureService from "../src/services/claudeCapture.js";
 import * as WebSearchPlugin from "../src/plugins/webSearch.js";
+import { recordEvaluationSnapshot } from "../src/evals/recorder.js";
+import type { Plan, ExecutionResult } from "../src/plan/schema.js";
+import type { VerificationResult } from "../src/schema/verification.js";
+import type { ExecutionRunRecord, DetailSourceLink } from "../src/execution/store.js";
+import { TraceResponseSchema } from "@assistant/contracts";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { ingestEvent } from "../src/events/ingest.js";
+import { resetDb } from "../src/storage/db.js";
+import { randomUUID } from "node:crypto";
 
 const mockResult = {
   plan: {
@@ -176,5 +187,67 @@ describe("GraphQL server", () => {
     const response = await graphqlRequest(server, query, variables);
     expect(response.errors).toBeUndefined();
     expect(response.data.previewEdits.edits).toBeInstanceOf(Array);
+  });
+
+  it("exposes trace contract snapshots", async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "evals-"));
+    process.env.EVALS_DIR = tempDir;
+    process.env.OPENAI_API_KEY = "test-key";
+    process.env.APP_DB_PATH = ":memory:";
+    const plan: Plan = {
+      traceId: "trace-contract-1",
+      userIntent: "demo",
+      assumptions: [],
+      actions: [],
+      receiptSummary: "done",
+    };
+    const execution: ExecutionResult = {
+      traceId: plan.traceId,
+      obsidian: { updatedNotes: [] },
+      todoist: { createdTasks: [] },
+      linear: { createdIssues: [] },
+      warnings: [],
+    };
+    const runId = randomUUID();
+    const verification: VerificationResult = {
+      id: randomUUID(),
+      traceId: plan.traceId,
+      runId,
+      status: "passing",
+      issues: [],
+      createdAt: new Date().toISOString(),
+    };
+    const run: ExecutionRunRecord = {
+      id: runId,
+      traceId: plan.traceId,
+      planUserIntent: plan.userIntent,
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+    };
+    const links: DetailSourceLink[] = [];
+    resetDb();
+    await ingestEvent({
+      event_id: "evt-1",
+      source: "manual",
+      type: "capture",
+      occurred_at: new Date().toISOString(),
+      received_at: new Date().toISOString(),
+      trace_id: plan.traceId,
+      payload: {},
+      context: { user_id: "user-1", workflow: "capture" },
+    });
+    const snapshotFile = await recordEvaluationSnapshot({ plan, execution, verification, run, links });
+    expect(snapshotFile).toBeTruthy();
+
+    const server = buildGraphQLServer();
+    const query = /* GraphQL */ `
+      query TraceContract($traceId: String!) {
+        traceContract(traceId: $traceId)
+      }
+    `;
+    const res = await graphqlRequest(server, query, { traceId: plan.traceId });
+    expect(res.errors).toBeUndefined();
+    const contract = TraceResponseSchema.parse(res.data.traceContract);
+    expect(contract.plan.traceId).toBe(plan.traceId);
   });
 });

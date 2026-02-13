@@ -4,7 +4,7 @@ import { defaultLabels, globalTags, isDryRun, loadEnv } from "../config/env.js";
 import { ObsidianRest, ObsidianVault } from "../connectors/obsidian.js";
 import { TodoistClient } from "../connectors/todoist.js";
 import { LinearClient } from "../connectors/linear.js";
-import { logExecutionResult } from "./store.js";
+import { logExecutionResult, listDetailSourceLinks } from "./store.js";
 import { verifyExecution } from "../verification/service.js";
 import { recordEvaluationSnapshot } from "../evals/recorder.js";
 
@@ -157,6 +157,7 @@ export async function executePlan(plan: Plan): Promise<ExecutionResult> {
     finishedAt,
   });
   const verification = await verifyExecution(parsed.traceId, run.id);
-  await recordEvaluationSnapshot({ plan, execution: parsed, verification });
+  const links = await listDetailSourceLinks(parsed.traceId);
+  await recordEvaluationSnapshot({ plan, execution: parsed, verification, run, links });
   return parsed;
 }

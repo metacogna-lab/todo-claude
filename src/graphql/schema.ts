@@ -1,4 +1,5 @@
 import { createSchema } from "graphql-yoga";
+import GraphQLJSON from "graphql-type-json";
 import { taskRegistry } from "../services/taskRegistry.js";
 import { deriveIntegrationProfile } from "../services/integrationProfile.js";
 import { summarizeHealth } from "../observability/monitoring.js";
@@ -8,8 +9,11 @@ import type { IntegrationProfile, Task } from "../schema/index.js";
 import type { Plan } from "../plan/schema.js";
 import { webSearch } from "../plugins/webSearch.js";
 import { previewEdits } from "../skills/codePreview.js";
+import { loadLatestTraceContract } from "../evals/recorder.js";
 
 const typeDefs = /* GraphQL */ `
+  scalar JSON
+
   enum TaskStatus {
     todo
     active
@@ -185,6 +189,7 @@ const typeDefs = /* GraphQL */ `
     integrationProfile: IntegrationProfile!
     tasks: [Task!]!
     webSearch(query: String!): WebSearchResult!
+    traceContract(traceId: String!): JSON!
   }
 
   type Mutation {
@@ -195,12 +200,20 @@ const typeDefs = /* GraphQL */ `
 `;
 
 const resolvers = {
+  JSON: GraphQLJSON,
   Query: {
     health: () => summarizeHealth(),
     integrationProfile: (): IntegrationProfile => deriveIntegrationProfile(),
     tasks: (): Task[] => taskRegistry.list(),
     webSearch: async (_parent: unknown, args: { query: string }) => {
       return webSearch(args.query);
+    },
+    traceContract: async (_parent: unknown, args: { traceId: string }) => {
+      const payload = await loadLatestTraceContract(args.traceId);
+      if (!payload) {
+        throw new Error(`No contract snapshot for trace ${args.traceId}`);
+      }
+      return payload;
     },
   },
   Mutation: {
