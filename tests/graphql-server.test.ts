@@ -2,46 +2,45 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildGraphQLServer } from "../src/graphql/server.js";
 import { taskRegistry } from "../src/services/taskRegistry.js";
 import { resetMetrics } from "../src/observability/monitoring.js";
-import { runClaudeCapture } from "../src/services/claudeCapture.js";
+import * as ClaudeCaptureService from "../src/services/claudeCapture.js";
 
-vi.mock("../src/services/claudeCapture.js", () => {
-  const mockResult = {
-    plan: {
-      traceId: "trace-mock",
-      userIntent: "demo",
-      assumptions: [],
-      actions: [
-        {
-          type: "obsidian.upsert_note",
-          notePath: "Projects/Demo.md",
-          title: "Demo",
-          markdown: "Summary",
-          tags: [],
-        },
-      ],
-      receiptSummary: "Receipt summary",
-    },
-    execution: {
-      traceId: "trace-mock",
-      obsidian: { updatedNotes: [] },
-      todoist: { createdTasks: [] },
-      linear: { createdIssues: [] },
-      warnings: [],
-    },
-    receipt: {
-      notePath: "Projects/Demo.md",
-      receiptMarkdown: "Receipt",
-      finalMarkdown: "# Demo",
-      written: false,
-    },
-  };
-  return {
-    runClaudeCapture: vi.fn(async () => mockResult),
-  };
-});
+const mockResult = {
+  plan: {
+    traceId: "trace-mock",
+    userIntent: "demo",
+    assumptions: [],
+    actions: [
+      {
+        type: "obsidian.upsert_note",
+        notePath: "Projects/Demo.md",
+        title: "Demo",
+        markdown: "Summary",
+        tags: [],
+      },
+    ],
+    receiptSummary: "Receipt summary",
+  },
+  execution: {
+    traceId: "trace-mock",
+    obsidian: { updatedNotes: [] },
+    todoist: { createdTasks: [] },
+    linear: { createdIssues: [] },
+    warnings: [],
+  },
+  receipt: {
+    notePath: "Projects/Demo.md",
+    receiptMarkdown: "Receipt",
+    finalMarkdown: "# Demo",
+    written: false,
+  },
+};
+
+const runClaudeCaptureSpy = vi
+  .spyOn(ClaudeCaptureService, "runClaudeCapture")
+  .mockImplementation(async () => mockResult);
 
 afterAll(() => {
-  vi.resetModules();
+  vi.restoreAllMocks();
 });
 
 async function graphqlRequest(server: ReturnType<typeof buildGraphQLServer>, query: string, variables?: Record<string, unknown>) {
@@ -129,6 +128,6 @@ describe("GraphQL server", () => {
     expect(response.errors).toBeUndefined();
     expect(response.data.captureWithClaude.plan.traceId).toBe("trace-mock");
     expect(response.data.captureWithClaude.receipt.notePath).toBe("Projects/Demo.md");
-    expect(runClaudeCapture).toHaveBeenCalledWith({ text: "Ship release", writeReceipt: true });
+    expect(runClaudeCaptureSpy).toHaveBeenCalledWith({ text: "Ship release", writeReceipt: true });
   });
 });
