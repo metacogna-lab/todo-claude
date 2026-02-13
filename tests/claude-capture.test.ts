@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { runClaudeCapture } from "../src/services/claudeCapture.js";
 import type { Plan, ExecutionResult } from "../src/plan/schema.js";
 
@@ -24,6 +24,9 @@ vi.mock("../src/connectors/obsidian.js", () => ({
 const { generatePlan } = await import("../src/agent/planner.js");
 const { executePlan } = await import("../src/execution/execute.js");
 const { buildReceiptMarkdown } = await import("../src/workflows/receipt.js");
+const generatePlanMock = generatePlan as unknown as Mock;
+const executePlanMock = executePlan as unknown as Mock;
+const buildReceiptMarkdownMock = buildReceiptMarkdown as unknown as Mock;
 
 const samplePlan: Plan = {
   traceId: "trace-123",
@@ -55,9 +58,9 @@ describe("runClaudeCapture", () => {
   beforeEach(() => {
     process.env = { ...originalEnv, ANTHROPIC_API_KEY: "test-key" };
     obsidianUpsertMock.mockClear();
-    vi.mocked(generatePlan).mockResolvedValue(samplePlan);
-    vi.mocked(executePlan).mockResolvedValue(sampleExecution);
-    vi.mocked(buildReceiptMarkdown).mockReturnValue("## Receipt");
+    generatePlanMock.mockResolvedValue(samplePlan);
+    executePlanMock.mockResolvedValue(sampleExecution);
+    buildReceiptMarkdownMock.mockReturnValue("## Receipt");
   });
 
   afterEach(() => {
