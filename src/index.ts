@@ -6,6 +6,7 @@ import { registerDevtoolsArtifact } from "./observability/devtools.js";
 import { listTraceSnapshots, loadTraceSnapshot } from "./evals/recorder.js";
 import { runDoctor } from "./services/doctor.js";
 import { ensureTelemetryStarted } from "./observability/otel.js";
+import { startWebhookServer } from "./webhooks/server.js";
 
 ensureTelemetryStarted();
 
@@ -114,6 +115,14 @@ program
       "Snapshot replayed"
     );
     console.log(JSON.stringify(payload, null, 2));
+  });
+
+program
+  .command("webhooks")
+  .description("Start the webhook listener server")
+  .option("-p, --port <port>", "Port to bind", "4100")
+  .action(async (options: { port: string }) => {
+    startWebhookServer(Number(options.port));
   });
 
 try {

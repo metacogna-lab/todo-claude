@@ -5,6 +5,9 @@ import { schema } from "./schema.js";
 import { createObservabilityPlugin } from "./plugins/observability.js";
 import { logger } from "../logging/logger.js";
 import { ensureTelemetryStarted } from "../observability/otel.js";
+import { loadEnv } from "../config/env.js";
+
+loadEnv();
 
 ensureTelemetryStarted();
 
