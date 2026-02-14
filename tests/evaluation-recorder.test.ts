@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, expect, it } from "vitest";
 import { recordEvaluationSnapshot } from "../src/evals/recorder.js";
 import type { Plan, ExecutionResult } from "../src/plan/schema.js";
 import type { VerificationResult } from "../src/schema/verification.js";

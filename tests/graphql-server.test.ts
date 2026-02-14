@@ -7,7 +7,10 @@ import * as WebSearchPlugin from "../src/plugins/webSearch.js";
 import { recordEvaluationSnapshot } from "../src/evals/recorder.js";
 import type { Plan, ExecutionResult } from "../src/plan/schema.js";
 import type { VerificationResult } from "../src/schema/verification.js";
-import type { ExecutionRunRecord, DetailSourceLink } from "../src/execution/store.js";
+import type {
+  ExecutionRunRecord,
+  DetailSourceLink,
+} from "../src/execution/store.js";
 import { TraceResponseSchema } from "@assistant/contracts";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -55,7 +58,11 @@ afterAll(() => {
   vi.restoreAllMocks();
 });
 
-async function graphqlRequest(server: ReturnType<typeof buildGraphQLServer>, query: string, variables?: Record<string, unknown>) {
+async function graphqlRequest(
+  server: ReturnType<typeof buildGraphQLServer>,
+  query: string,
+  variables?: Record<string, unknown>
+) {
   const response = await server.fetch("http://localhost/graphql", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -86,10 +93,14 @@ describe("GraphQL server", () => {
       }
     `;
 
-    const variables = { input: { text: "GraphQL all the things", labels: ["obs"] } };
+    const variables = {
+      input: { text: "GraphQL all the things", labels: ["obs"] },
+    };
     const result = await graphqlRequest(server, mutation, variables);
     expect(result.errors).toBeUndefined();
-    expect(result.data.captureThought.task.title).toBe("GraphQL all the things");
+    expect(result.data.captureThought.task.title).toBe(
+      "GraphQL all the things"
+    );
     expect(result.data.captureThought.traceId).toHaveLength(36);
 
     const query = /* GraphQL */ `
@@ -109,7 +120,10 @@ describe("GraphQL server", () => {
   it("reports health metrics after operations", async () => {
     const server = buildGraphQLServer();
     await graphqlRequest(server, `query { tasks { id } }`);
-    const health = await graphqlRequest(server, `query { health { status samples } }`);
+    const health = await graphqlRequest(
+      server,
+      `query { health { status samples } }`
+    );
     expect(health.errors).toBeUndefined();
     expect(health.data.health.samples).toBeGreaterThan(0);
   });
@@ -139,8 +153,13 @@ describe("GraphQL server", () => {
     const response = await graphqlRequest(server, mutation, variables);
     expect(response.errors).toBeUndefined();
     expect(response.data.captureWithClaude.plan.traceId).toBe("trace-mock");
-    expect(response.data.captureWithClaude.receipt.notePath).toBe("Projects/Demo.md");
-    expect(runClaudeCaptureSpy).toHaveBeenCalledWith({ text: "Ship release", writeReceipt: true });
+    expect(response.data.captureWithClaude.receipt.notePath).toBe(
+      "Projects/Demo.md"
+    );
+    expect(runClaudeCaptureSpy).toHaveBeenCalledWith({
+      text: "Ship release",
+      writeReceipt: true,
+    });
   });
 
   it("supports webSearchResults query when plugin enabled", async () => {
@@ -149,7 +168,11 @@ describe("GraphQL server", () => {
       query: "bun js",
       answer: "Bun is a fast all-in-one JavaScript runtime",
       results: [
-        { title: "Bun", url: "https://bun.sh", content: "Bun is a fast JavaScript runtime" },
+        {
+          title: "Bun",
+          url: "https://bun.sh",
+          content: "Bun is a fast JavaScript runtime",
+        },
       ],
     });
     const query = /* GraphQL */ `
@@ -183,7 +206,9 @@ describe("GraphQL server", () => {
         }
       }
     `;
-    const variables = { input: { instructions: "Add a heading", files: ["README.md"] } };
+    const variables = {
+      input: { instructions: "Add a heading", files: ["README.md"] },
+    };
     const response = await graphqlRequest(server, query, variables);
     expect(response.errors).toBeUndefined();
     expect(response.data.previewEdits.edits).toBeInstanceOf(Array);
@@ -236,7 +261,13 @@ describe("GraphQL server", () => {
       payload: {},
       context: { user_id: "user-1", workflow: "capture" },
     });
-    const snapshotFile = await recordEvaluationSnapshot({ plan, execution, verification, run, links });
+    const snapshotFile = await recordEvaluationSnapshot({
+      plan,
+      execution,
+      verification,
+      run,
+      links,
+    });
     expect(snapshotFile).toBeTruthy();
 
     const server = buildGraphQLServer();
@@ -249,5 +280,93 @@ describe("GraphQL server", () => {
     expect(res.errors).toBeUndefined();
     const contract = TraceResponseSchema.parse(res.data.traceContract);
     expect(contract.plan.traceId).toBe(plan.traceId);
+  });
+
+  it("lists and replays evaluation snapshots", async () => {
+    const plan: Plan = {
+      version: "1.0.0",
+      traceId: "trace-gql-snap",
+      userIntent: "demo plan",
+      assumptions: [],
+      actions: [],
+      receiptSummary: "done",
+    };
+    const execution: ExecutionResult = {
+      traceId: plan.traceId,
+      obsidian: { updatedNotes: [] },
+      todoist: { createdTasks: [] },
+      linear: { createdIssues: [] },
+      warnings: [],
+    };
+    const runId = randomUUID();
+    const verification: VerificationResult = {
+      id: randomUUID(),
+      traceId: plan.traceId,
+      runId,
+      status: "passing",
+      issues: [],
+      createdAt: new Date().toISOString(),
+    };
+    const run: ExecutionRunRecord = {
+      id: runId,
+      traceId: plan.traceId,
+      planUserIntent: plan.userIntent,
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+    };
+    const links: DetailSourceLink[] = [];
+    resetDb();
+    await ingestEvent({
+      event_id: "evt-2",
+      source: "manual",
+      type: "capture",
+      occurred_at: new Date().toISOString(),
+      received_at: new Date().toISOString(),
+      trace_id: plan.traceId,
+      payload: {},
+      context: { user_id: "user-2", workflow: "capture" },
+    });
+    await recordEvaluationSnapshot({
+      plan,
+      execution,
+      verification,
+      run,
+      links,
+    });
+
+    const server = buildGraphQLServer();
+    const listQuery = /* GraphQL */ `
+      query EvaluationSnapshots($traceId: String!) {
+        evaluationSnapshots(traceId: $traceId) {
+          file
+          path
+          size
+          createdAt
+        }
+      }
+    `;
+    const listRes = await graphqlRequest(server, listQuery, {
+      traceId: plan.traceId,
+    });
+    expect(listRes.errors).toBeUndefined();
+    const files = listRes.data.evaluationSnapshots;
+    expect(files.length).toBeGreaterThan(0);
+    const file = files[0]?.file;
+    expect(typeof file).toBe("string");
+
+    const replayQuery = /* GraphQL */ `
+      query ReplaySnapshot($traceId: String!, $file: String!) {
+        replayEvaluationSnapshot(traceId: $traceId, file: $file)
+      }
+    `;
+    const replayRes = await graphqlRequest(server, replayQuery, {
+      traceId: plan.traceId,
+      file,
+    });
+    expect(replayRes.errors).toBeUndefined();
+    const replayed = TraceResponseSchema.parse(
+      replayRes.data.replayEvaluationSnapshot
+    );
+    expect(replayed.plan.traceId).toBe(plan.traceId);
   });
 });

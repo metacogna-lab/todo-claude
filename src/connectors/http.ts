@@ -4,23 +4,29 @@ export type HttpOptions = {
   method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   url: string;
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown;
   timeoutMs?: number;
 };
 
 export async function httpJson<T>(opts: HttpOptions): Promise<T> {
   const { method, url, headers, body } = opts;
-  const res = await request(url, {
+  const requestOptions: Record<string, unknown> = {
     method,
     headers: {
       "accept": "application/json",
-      ...(body ? { "content-type": "application/json" } : {}),
+      ...(body !== undefined && body !== null ? { "content-type": "application/json" } : {}),
       ...(headers ?? {}),
     },
-    body: body ? JSON.stringify(body) : undefined,
     bodyTimeout: opts.timeoutMs ?? 30_000,
     headersTimeout: opts.timeoutMs ?? 30_000,
-  });
+  };
+  if (body !== undefined && body !== null) {
+    requestOptions.body = typeof body === "string" ? body : JSON.stringify(body);
+  }
+  if (body === null) {
+    requestOptions.body = null;
+  }
+  const res = await request(url, requestOptions);
 
   const text = await res.body.text();
   if (res.statusCode < 200 || res.statusCode >= 300) {

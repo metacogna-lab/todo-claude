@@ -4,12 +4,18 @@ import { createYoga } from "graphql-yoga";
 import { schema } from "./schema.js";
 import { createObservabilityPlugin } from "./plugins/observability.js";
 import { logger } from "../logging/logger.js";
+import { ensureTelemetryStarted } from "../observability/otel.js";
+
+ensureTelemetryStarted();
 
 export function buildGraphQLServer() {
   return createYoga({
     schema,
     plugins: [createObservabilityPlugin()],
     graphqlEndpoint: "/graphql",
+    maskedErrors: {
+      errorMessage: "Internal error",
+    },
     logging: {
       debug: (...args) => logger.debug(args),
       info: (...args) => logger.info(args),

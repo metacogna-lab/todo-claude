@@ -32,10 +32,11 @@ export class ObsidianRest {
     // This is intentionally generic because community plugin endpoints vary.
     // You can adapt this to your plugin of choice.
     const url = `${this.baseUrl.replace(/\/$/, "")}/note`;
-    await httpJson<any>({
+    const headers = this.token ? { Authorization: `Bearer ${this.token}` } : undefined;
+    await httpJson<Record<string, unknown>>({
       method: "PUT",
       url,
-      headers: this.token ? { Authorization: `Bearer ${this.token}` } : undefined,
+      ...(headers ? { headers } : {}),
       body: { path: notePath, content: markdown },
     });
     const uri = `obsidian://open?path=${encodeURIComponent(notePath)}`;

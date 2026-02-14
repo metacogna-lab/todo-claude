@@ -1,30 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { Langfuse } from "langfuse";
-import { logger } from "../logging/logger.js";
+import { startActiveObservation } from "@langfuse/tracing";
+import { recordEvidence } from "./evidence.js";
+import { ensureTelemetryStarted } from "./otel.js";
 
-let cachedClient: Langfuse | null | undefined;
-
-export function getLangfuseClient(): Langfuse | null {
-  if (cachedClient !== undefined) return cachedClient;
-
-  const publicKey = process.env.LANGFUSE_PUBLIC_KEY;
-  const secretKey = process.env.LANGFUSE_SECRET_KEY;
-  const host = process.env.LANGFUSE_HOST;
-
-  if (!publicKey || !secretKey) {
-    logger.warn("Langfuse keys missing; traces disabled");
-    cachedClient = null;
-    return cachedClient;
-  }
-
-  cachedClient = new Langfuse({
-    publicKey,
-    secretKey,
-    baseUrl: host,
-  });
-
-  return cachedClient;
-}
+const hasLangfuseConfig = () =>
+  Boolean(process.env.LANGFUSE_PUBLIC_KEY) &&
+  Boolean(process.env.LANGFUSE_SECRET_KEY) &&
+  Boolean(process.env.LANGFUSE_HOST);
 
 export type TraceResult<T> = {
   result: T;
@@ -36,25 +18,20 @@ export async function withLangfuseTrace<T>(
   metadata: Record<string, unknown>,
   fn: () => Promise<T> | T
 ): Promise<TraceResult<T>> {
-  const langfuse = getLangfuseClient();
   const traceId = randomUUID();
-
-  if (!langfuse) {
+  ensureTelemetryStarted();
+  if (!hasLangfuseConfig()) {
     const result = await fn();
     return { result, traceId };
   }
 
-  try {
-    await langfuse.trace({
-      id: traceId,
-      name,
-      metadata,
-    });
-  } catch (error) {
-    logger.warn({ err: error }, "Langfuse trace creation failed");
-  }
+  const result = await startActiveObservation(name, async span => {
+    span.update({ input: metadata });
+    const output = await fn();
+    span.update({ output: "completed" });
+    return output;
+  });
 
-  const result = await fn();
   return { result, traceId };
 }
 
@@ -63,19 +40,32 @@ export async function recordGraphQLOperationTrace(params: {
   durationMs: number;
   success: boolean;
 }): Promise<void> {
-  const langfuse = getLangfuseClient();
-  if (!langfuse) return;
-
-  try {
-    await langfuse.trace({
-      id: randomUUID(),
-      name: `graphql.${params.operationName}`,
-      metadata: {
+  ensureTelemetryStarted();
+  if (!hasLangfuseConfig()) return;
+  await startActiveObservation(`graphql.${params.operationName}`, async span => {
+    span.update({
+      input: {
         durationMs: params.durationMs,
         success: params.success,
       },
     });
-  } catch (error) {
-    logger.warn({ err: error }, "GraphQL trace emit failed");
-  }
+    span.update({ output: "recorded" });
+  });
+}
+
+export async function recordLangfuseTrace(params: {
+  traceId: string;
+  name: string;
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  const status: "recorded" | "missing_config" = hasLangfuseConfig()
+    ? "recorded"
+    : "missing_config";
+  await recordEvidence({
+    traceId: params.traceId,
+    kind: "langfuse",
+    reference: params.name,
+    status,
+    metadata: params.metadata ?? {},
+  });
 }

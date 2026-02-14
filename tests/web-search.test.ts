@@ -1,6 +1,9 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 
 describe("webSearch", () => {
+beforeEach(() => {
+  delete process.env.TAVILY_API_KEY;
+});
 afterEach(() => {
   delete process.env.TAVILY_API_KEY;
   vi.restoreAllMocks();
@@ -15,8 +18,7 @@ it("throws when API key missing", async () => {
     process.env.TAVILY_API_KEY = "test-key";
     const { webSearch } = await import("../src/plugins/webSearch.js");
     const mockResponse = {
-      ok: true,
-      status: 200,
+      statusCode: 200,
       body: {
         text: async () => "",
         json: async () => ({

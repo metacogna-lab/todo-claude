@@ -12,6 +12,6 @@ try {
   run("bun test");
   console.log("✅ Tests passed. Ready to merge.");
 } catch (error) {
-  console.error("❌ Phase runner detected an error");
+  console.error("❌ Phase runner detected an error", error);
   process.exitCode = 1;
 }

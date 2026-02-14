@@ -12,7 +12,8 @@ export function createObservabilityPlugin(): Plugin {
       return {
         async onExecuteDone({ result }) {
           const durationMs = performance.now() - started;
-          const success = !result.errors?.length;
+          const maybeErrors = (result as { errors?: unknown }).errors;
+          const success = !Array.isArray(maybeErrors) || maybeErrors.length === 0;
 
           recordGraphQLMetric({
             operationName,

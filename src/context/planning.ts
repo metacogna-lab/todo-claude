@@ -2,7 +2,7 @@ import { loadEnv } from "../config/env.js";
 import { getDb } from "../storage/db.js";
 import { PlanningContextSchema, type PlanningContext } from "../schema/planningContext.js";
 import { type EventEnvelope } from "../schema/event.js";
-import { PlanAction } from "../plan/schema.js";
+import { type PlanActionType } from "../plan/schema.js";
 
 const insertContextStmt = () => getDb().query(`
   INSERT INTO planning_contexts (
@@ -43,7 +43,7 @@ export async function upsertPlanningContextFromEvent(event: EventEnvelope): Prom
     eventType: event.type,
     detailSourceCapabilities: deriveDetailSourceCapabilities(env),
     environmentDefaults: deriveEnvironmentDefaults(env),
-    historicalSignals: undefined as { previousActions?: PlanAction[] } | undefined,
+    historicalSignals: undefined as { previousActions?: PlanActionType[] } | undefined,
     createdAt: new Date().toISOString(),
   });
 

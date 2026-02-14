@@ -64,12 +64,23 @@ function init(db: Database) {
       created_at TEXT NOT NULL,
       FOREIGN KEY(run_id) REFERENCES execution_runs(id)
     );
+
+    CREATE TABLE IF NOT EXISTS observability_evidence (
+      id TEXT PRIMARY KEY,
+      trace_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      reference TEXT NOT NULL,
+      status TEXT NOT NULL,
+      metadata TEXT,
+      created_at TEXT NOT NULL
+    );
   `);
 }
 
 export function getDb(): Database {
   if (db) return db;
-  const dbPath = process.env.APP_DB_PATH ?? resolve(process.cwd(), "data/app.db");
+  const dbPath =
+    process.env.APP_DB_PATH ?? resolve(process.cwd(), "data/app.db");
   if (dbPath !== ":memory:") {
     mkdirSync(dirname(dbPath), { recursive: true });
   }

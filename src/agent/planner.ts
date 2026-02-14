@@ -103,14 +103,14 @@ export async function generatePlan(userText: string): Promise<Plan> {
   const q = query({
     prompt: userText,
     options: {
-      model: env.OPENAI_MODEL,
+      model: env.OPENAI_MODEL ?? "gpt-4o-mini",
       systemPrompt: system,
       allowedTools: [],
       outputFormat: { type: "json_schema", schema: jsonSchema }
     }
   });
 
-  let resultJson: any | null = null;
+  let resultJson: unknown | null = null;
 
   for await (const msg of q) {
     if (msg.type === "result") {
@@ -123,7 +123,7 @@ export async function generatePlan(userText: string): Promise<Plan> {
   if (!resultJson) throw new Error("No plan produced by the Agent SDK");
 
   // Some SDK variants nest the JSON under { output: ... }
-  const candidate = (resultJson.output ?? resultJson) as unknown;
+  const candidate = ((resultJson as Record<string, unknown>).output ?? resultJson) as unknown;
 
   const parsed = PlanSchema.safeParse(candidate);
   if (!parsed.success) {

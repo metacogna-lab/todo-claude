@@ -9,7 +9,11 @@ import type { IntegrationProfile, Task } from "../schema/index.js";
 import type { Plan } from "../plan/schema.js";
 import { webSearch } from "../plugins/webSearch.js";
 import { previewEdits } from "../skills/codePreview.js";
-import { loadLatestTraceContract } from "../evals/recorder.js";
+import {
+  loadLatestTraceContract,
+  listTraceSnapshots,
+  loadTraceSnapshot,
+} from "../evals/recorder.js";
 
 const typeDefs = /* GraphQL */ `
   scalar JSON
@@ -170,6 +174,13 @@ const typeDefs = /* GraphQL */ `
     url: String!
   }
 
+  type EvaluationSnapshot {
+    file: String!
+    path: String!
+    size: Int!
+    createdAt: String!
+  }
+
   input PreviewEditsInput {
     instructions: String!
     files: [String!]
@@ -190,6 +201,8 @@ const typeDefs = /* GraphQL */ `
     tasks: [Task!]!
     webSearch(query: String!): WebSearchResult!
     traceContract(traceId: String!): JSON!
+    evaluationSnapshots(traceId: String!): [EvaluationSnapshot!]!
+    replayEvaluationSnapshot(traceId: String!, file: String!): JSON!
   }
 
   type Mutation {
@@ -215,23 +228,59 @@ const resolvers = {
       }
       return payload;
     },
+    evaluationSnapshots: async (
+      _parent: unknown,
+      args: { traceId: string }
+    ) => {
+      const entries = await listTraceSnapshots(args.traceId);
+      return entries.map((entry) => ({
+        file: entry.file,
+        path: entry.path,
+        size: entry.size,
+        createdAt: entry.createdAt,
+      }));
+    },
+    replayEvaluationSnapshot: async (
+      _parent: unknown,
+      args: { traceId: string; file: string }
+    ) => {
+      const payload = await loadTraceSnapshot(args.traceId, args.file);
+      if (!payload) {
+        throw new Error(
+          `Snapshot ${args.file} not found for trace ${args.traceId}`
+        );
+      }
+      return payload;
+    },
   },
   Mutation: {
-    captureThought: async (_parent: unknown, args: { input: { text: string; labels?: string[]; dryRun?: boolean } }) => {
+    captureThought: async (
+      _parent: unknown,
+      args: { input: { text: string; labels?: string[]; dryRun?: boolean } }
+    ) => {
       return captureThought(args.input);
     },
-    captureWithClaude: async (_parent: unknown, args: { input: { text: string; writeReceipt?: boolean } }) => {
+    captureWithClaude: async (
+      _parent: unknown,
+      args: { input: { text: string; writeReceipt?: boolean } }
+    ) => {
       return runClaudeCapture(args.input);
     },
-    previewEdits: async (_parent: unknown, args: { input: { instructions: string; files?: string[] } }) => {
+    previewEdits: async (
+      _parent: unknown,
+      args: { input: { instructions: string; files?: string[] } }
+    ) => {
       return previewEdits(args.input);
     },
   },
   PlanAction: {
     __resolveType(obj: Plan["actions"][number]) {
-      if (obj.type === "obsidian.upsert_note") return "ObsidianUpsertPlanAction";
-      if (obj.type === "todoist.create_task") return "TodoistCreateTaskPlanAction";
-      if (obj.type === "linear.create_issue") return "LinearCreateIssuePlanAction";
+      if (obj.type === "obsidian.upsert_note")
+        return "ObsidianUpsertPlanAction";
+      if (obj.type === "todoist.create_task")
+        return "TodoistCreateTaskPlanAction";
+      if (obj.type === "linear.create_issue")
+        return "LinearCreateIssuePlanAction";
       return null;
     },
   },

@@ -26,7 +26,7 @@ export async function captureThought(input: CaptureThoughtInput): Promise<Captur
       if (!input.dryRun) {
         // Real workflow integration hooks in future iterations.
       }
-      return taskRegistry.create({ title: trimmed, labels: input.labels });
+      return taskRegistry.create({ title: trimmed, labels: input.labels ?? [] });
     }
   );
 

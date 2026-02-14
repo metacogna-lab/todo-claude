@@ -3,6 +3,10 @@ import { httpJson } from "./http.js";
 const LINEAR_API = "https://api.linear.app/graphql";
 
 export type LinearIssue = { id: string; title: string; url?: string };
+type LinearGraphQLResponse<T> = {
+  data?: T;
+  errors?: unknown[];
+};
 
 export class LinearClient {
   constructor(private token: string) {}
@@ -23,7 +27,7 @@ export class LinearClient {
       }
     `;
 
-    const resp = await httpJson<any>({
+    const resp = await httpJson<LinearGraphQLResponse<{ issueCreate?: { issue?: LinearIssue } }>>({
       method: "POST",
       url: LINEAR_API,
       headers: {
