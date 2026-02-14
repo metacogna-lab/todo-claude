@@ -96,6 +96,34 @@ docker run --env-file .env -p 4000:4000 claude-assistant
 
 GitHub Actions also ships a release workflow (`.github/workflows/release.yml`) that builds/tests and pushes images to `ghcr.io/<org>/<repo>` when tags like `v1.2.3` are pushed (or manually triggered via `workflow_dispatch` with an `image_tag`).
 
+### 6) Docker Compose + Webhooks
+
+`docker-compose.yml` spins up both the GraphQL API (`:4000`) and the webhook listener (`:4100`):
+
+```bash
+docker compose up --build
+```
+
+Each webhook endpoint lives at:
+
+- `POST /webhooks/todoist`
+- `POST /webhooks/linear`
+- `POST /webhooks/obsidian`
+
+Expose `:4100` to external services (Todoist/Linear/Obsidian) via Cloudflare Tunnel:
+
+```bash
+cloudflared tunnel --url http://localhost:4100 --hostname hooks.example.com
+```
+
+Then configure:
+
+1. **Todoist** → Developer Console → Webhooks → point to `https://hooks.example.com/webhooks/todoist`.
+2. **Linear** → Workspace Settings → Webhooks → `https://hooks.example.com/webhooks/linear`.
+3. **Obsidian** (if using a remote vault) → Cloud provider automations or custom scripts → `https://hooks.example.com/webhooks/obsidian`.
+
+Each webhook triggers a reload placeholder today (logged via `logger.info`); extend `src/webhooks/server.ts` to tie into your refresh logic.
+
 ## What gets created
 
 - **Obsidian**

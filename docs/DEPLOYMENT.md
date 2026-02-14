@@ -19,6 +19,23 @@ This document summarizes Phase C outcomes (see `tasks/bridge.md`) and the surr
 - `.github/workflows/ci.yml` runs `bun run lint` and `bun test` on every push/PR. Keep this green before tagging releases.
 - Tests hit the entire workflow suite plus the observability/verification gates; missing Langfuse/DevTools warnings are expected locally when keys are absent.
 
+## 4. Webhook Exposure
+- `docker-compose.yml` orchestrates two services from the same image:
+  - `api`: `bun dist/index.js api --port 4000`
+  - `webhooks`: `bun dist/index.js webhooks --port 4100`
+- Expose the webhook listener through a Cloudflare Tunnel (or equivalent) so external systems can reach it:
+  ```bash
+  cloudflared tunnel --url http://localhost:4100 --hostname hooks.example.com
+  ```
+- Configure integrations to hit the appropriate routes:
+  | Connector | Endpoint | Notes |
+  | --- | --- | --- |
+  | Todoist | `https://hooks.example.com/webhooks/todoist` | Create under [Todoist Developer Webhooks](https://developer.todoist.com/sync/v9/#webhooks) |
+  | Linear | `https://hooks.example.com/webhooks/linear` | Workspace Settings → Webhooks |
+  | Obsidian | `https://hooks.example.com/webhooks/obsidian` | Use automation/push scripts when vault syncs |
+
+Extend the `triggerReload` placeholder in `src/webhooks/server.ts` with the actual refresh logic for each detail source.
+
 ## 4. Release Workflow
 1. Repository variables/secrets:
    - Optional `CONTAINER_REGISTRY` (defaults to `ghcr.io`) to target another registry.

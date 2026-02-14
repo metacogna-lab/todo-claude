@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    image: claude-assistant:latest
+    env_file: .env
+    ports:
+      - "4000:4000"
+    command: ["bun", "dist/index.js", "api", "--port", "4000"]
+
+  webhooks:
+    build: .
+    image: claude-assistant:latest
+    env_file: .env
+    ports:
+      - "4100:4100"
+    command: ["bun", "dist/index.js", "webhooks", "--port", "4100"]
