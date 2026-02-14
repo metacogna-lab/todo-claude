@@ -15,8 +15,8 @@
   "scripts": {
     "dev": "bun src/index.ts",
     "dev:api": "bun src/graphql/server.ts",
-    "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
+    "build": "bun run contracts:build && tsc -p tsconfig.json",
+    "start": "bun dist/index.js",
     "lint": "./node_modules/.bin/eslint .",
     "format": "./node_modules/.bin/prettier --write .",
     "format:check": "./node_modules/.bin/prettier --check .",
