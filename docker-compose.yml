@@ -15,4 +15,6 @@ services:
     env_file: .env
     ports:
       - "4100:4100"
+    environment:
+      - WEBHOOK_PUBLIC_HOST=hooks.metacogna.ai
     command: ["bun", "dist/index.js", "webhooks", "--port", "4100"]

@@ -110,17 +110,26 @@ Each webhook endpoint lives at:
 - `POST /webhooks/linear`
 - `POST /webhooks/obsidian`
 
-Expose `:4100` to external services (Todoist/Linear/Obsidian) via Cloudflare Tunnel:
+Expose `:4100` to external services (Todoist/Linear/Obsidian) via Cloudflare Tunnel. The repository defaults to `hooks.metacogna.ai` (see `WEBHOOK_PUBLIC_HOST` in `docker-compose.yml`). From a shell with `cloudflared` installed:
 
 ```bash
-cloudflared tunnel --url http://localhost:4100 --hostname hooks.example.com
+cloudflared tunnel --url http://localhost:4100 --hostname hooks.metacogna.ai
 ```
 
 Then configure:
 
-1. **Todoist** → Developer Console → Webhooks → point to `https://hooks.example.com/webhooks/todoist`.
-2. **Linear** → Workspace Settings → Webhooks → `https://hooks.example.com/webhooks/linear`.
-3. **Obsidian** (if using a remote vault) → Cloud provider automations or custom scripts → `https://hooks.example.com/webhooks/obsidian`.
+1. **Todoist** → Developer Console → Webhooks → point to `https://hooks.metacogna.ai/webhooks/todoist`.
+2. **Linear** → Workspace Settings → Webhooks → `https://hooks.metacogna.ai/webhooks/linear`.
+3. **Obsidian** (if using a remote vault) → Cloud provider automations or custom scripts → `https://hooks.metacogna.ai/webhooks/obsidian`.
+
+Cloudflare setup checklist:
+
+1. Add `hooks.metacogna.ai` as a DNS record (CNAME or proxied A) in your Cloudflare zone.
+2. Create a named tunnel, e.g. `cloudflared tunnel create claude-hooks`.
+3. Map the hostname to the tunnel in Cloudflare (`cloudflared tunnel route dns claude-hooks hooks.metacogna.ai`).
+4. Run `cloudflared tunnel run claude-hooks` locally or in CI with `--url http://localhost:4100` so traffic reaches the webhook container.
+
+The same pattern works for any hostname—just update `WEBHOOK_PUBLIC_HOST` and the Cloudflare DNS/Tunnel settings accordingly.
 
 Each webhook triggers a reload placeholder today (logged via `logger.info`); extend `src/webhooks/server.ts` to tie into your refresh logic.
 
