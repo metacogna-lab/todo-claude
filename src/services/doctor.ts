@@ -34,12 +34,16 @@ export async function runDoctorChecks(): Promise<DoctorCheck[]> {
   results.push(format("pass", "OPENAI_API_KEY", "Detected OpenAI credentials"));
 
   if (env.OBSIDIAN_VAULT_PATH) {
-    const exists = await checkPathExists(env.OBSIDIAN_VAULT_PATH);
-    results.push(
-      exists
-        ? format("pass", "Obsidian vault", `Writable vault at ${env.OBSIDIAN_VAULT_PATH}`)
-        : format("fail", "Obsidian vault", `Vault path ${env.OBSIDIAN_VAULT_PATH} not accessible`)
-    );
+    if (env.OBSIDIAN_VAULT_PATH.startsWith("obsidian://")) {
+      results.push(format("pass", "Obsidian vault", `Using Obsidian URI ${env.OBSIDIAN_VAULT_PATH}`));
+    } else {
+      const exists = await checkPathExists(env.OBSIDIAN_VAULT_PATH);
+      results.push(
+        exists
+          ? format("pass", "Obsidian vault", `Writable vault at ${env.OBSIDIAN_VAULT_PATH}`)
+          : format("fail", "Obsidian vault", `Vault path ${env.OBSIDIAN_VAULT_PATH} not accessible`)
+      );
+    }
   } else if (env.OBSIDIAN_REST_URL) {
     results.push(format("warn", "Obsidian REST", "REST endpoint configured; ensure token + plugin are running"));
   } else {
