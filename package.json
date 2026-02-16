@@ -13,6 +13,11 @@
     "packages/*"
   ],
   "scripts": {
+    "context": "bun run scripts/get-context.ts",
+    "review:daily": "bun run scripts/daily-review.ts",
+    "review:weekly": "bun run scripts/weekly-review.ts",
+    "review:product": "bun run scripts/product-review.ts",
+    "review:product:quarterly": "bun run scripts/product-review.ts --quarterly",
     "dev": "bun src/index.ts",
     "dev:api": "bun src/graphql/server.ts",
     "build": "bun run contracts:build && tsc -p tsconfig.json",

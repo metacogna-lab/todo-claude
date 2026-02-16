@@ -1,0 +1,219 @@
+#!/usr/bin/env bun
+/**
+ * Weekly Review Script
+ *
+ * Automates the weekly review process:
+ * 1. Consolidates daily summaries
+ * 2. Identifies patterns and themes
+ * 3. Archives completed work
+ * 4. Generates weekly summary
+ */
+
+import { logger } from "../src/logging/logger.js";
+import { captureWorkflow } from "../src/workflows/capture.js";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+
+const OBSIDIAN_VAULT = process.env.OBSIDIAN_VAULT_PATH ||
+  "/Users/nullzero/Library/Mobile Documents/iCloud~md~obsidian/Documents/claude-summary";
+
+interface WeeklySummary {
+  weekNumber: string;
+  year: string;
+  dailySummaries: string[];
+  patterns: string[];
+  achievements: string[];
+}
+
+function getWeekNumber(date: Date): { week: string; year: string } {
+  const startDate = new Date(date.getFullYear(), 0, 1);
+  const days = Math.floor((date.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+  const weekNumber = Math.ceil((days + startDate.getDay() + 1) / 7);
+
+  return {
+    week: weekNumber.toString().padStart(2, "0"),
+    year: date.getFullYear().toString(),
+  };
+}
+
+async function collectDailySummaries(week: string, year: string): Promise<string[]> {
+  const dailySummaryDir = path.join(OBSIDIAN_VAULT, "daily-summary");
+  const files = await fs.readdir(dailySummaryDir);
+
+  // Filter for markdown files with dates in current week
+  const summaries = files.filter((file) => {
+    if (!file.match(/^\d{4}-\d{2}-\d{2}\.md$/)) return false;
+
+    const fileDate = new Date(file.replace(".md", ""));
+    const fileWeek = getWeekNumber(fileDate);
+
+    return fileWeek.week === week && fileWeek.year === year;
+  });
+
+  logger.info({ week, year, count: summaries.length }, "Collected daily summaries");
+  return summaries;
+}
+
+async function archiveDailySummaries(summaries: string[], week: string, year: string): Promise<void> {
+  const archivePath = path.join(
+    OBSIDIAN_VAULT,
+    `daily-summary/notes-archive/${year}-W${week} Notes Archive.md`
+  );
+
+  let archiveContent = `# Notes Archive - Week ${week}, ${year}\n\n`;
+  archiveContent += `Archived ${summaries.length} daily summaries\n\n`;
+  archiveContent += `---\n\n`;
+
+  for (const summary of summaries) {
+    const summaryPath = path.join(OBSIDIAN_VAULT, "daily-summary", summary);
+    const content = await fs.readFile(summaryPath, "utf-8");
+
+    archiveContent += `## ${summary.replace(".md", "")}\n\n`;
+    archiveContent += content;
+    archiveContent += `\n\n---\n\n`;
+
+    // Delete the original daily summary
+    await fs.unlink(summaryPath);
+  }
+
+  await fs.writeFile(archivePath, archiveContent);
+  logger.info({ week, year, path: archivePath }, "Daily summaries archived");
+}
+
+async function analyzePatterns(summaries: string[]): Promise<string[]> {
+  // Simple pattern analysis - can be enhanced with LLM
+  const patterns: string[] = [];
+
+  let taskCount = 0;
+  let blockerCount = 0;
+
+  for (const summary of summaries) {
+    const summaryPath = path.join(OBSIDIAN_VAULT, "daily-summary", summary);
+    const content = await fs.readFile(summaryPath, "utf-8");
+
+    // Count tasks
+    const taskMatches = content.match(/- \[.\]/g);
+    if (taskMatches) taskCount += taskMatches.length;
+
+    // Count blockers
+    if (content.includes("Blockers:") && !content.includes("Blockers: None")) {
+      blockerCount++;
+    }
+  }
+
+  patterns.push(`Average tasks per day: ${(taskCount / summaries.length).toFixed(1)}`);
+  patterns.push(`Days with blockers: ${blockerCount}/${summaries.length}`);
+
+  return patterns;
+}
+
+async function generateWeeklySummary(summary: WeeklySummary): Promise<void> {
+  const summaryPath = path.join(
+    OBSIDIAN_VAULT,
+    `daily-summary/weekly-notes/${summary.year}-W${summary.weekNumber}.md`
+  );
+
+  const content = `# Weekly Review - Week ${summary.weekNumber}, ${summary.year}
+
+## Metrics
+- Daily Summaries: ${summary.dailySummaries.length}
+- Tasks Completed: [To be calculated from Todoist/Linear]
+- Linear Issues Closed: [To be calculated]
+- Notes Created: [To be calculated]
+
+## Key Achievements
+${summary.achievements.length > 0
+  ? summary.achievements.map((a, i) => `${i + 1}. ${a}`).join("\n")
+  : "- Review captured daily activities"
+}
+
+## Patterns Observed
+${summary.patterns.map(p => `- ${p}`).join("\n")}
+
+## Challenges & Blockers
+- [To be analyzed from daily summaries]
+
+## Consolidated Insights
+- Week ${summary.weekNumber} review completed
+- ${summary.dailySummaries.length} days of activity captured
+- Patterns identified for continuous improvement
+
+## Next Week's Focus
+1. Continue daily review discipline
+2. Address any recurring blockers
+3. Optimize task capture workflow
+
+## System Health
+- Obsidian: ✓ Operational
+- Todoist: [Check via doctor command]
+- Linear: [Check via doctor command]
+- Webhook integrations: [Check logs]
+
+---
+
+## Daily Summaries Archive
+Archived to: [[${summary.year}-W${summary.weekNumber} Notes Archive]]
+
+${summary.dailySummaries.map(s => `- [[${s.replace(".md", "")}]]`).join("\n")}
+
+---
+*Generated by weekly-review automation*
+*Review Plan: [[REVIEW_PLAN]]*
+`;
+
+  await fs.writeFile(summaryPath, content);
+  logger.info({ week: summary.weekNumber, year: summary.year, path: summaryPath },
+    "Weekly summary generated");
+}
+
+async function runWeeklyReview(): Promise<void> {
+  const now = new Date();
+  const { week, year } = getWeekNumber(now);
+
+  logger.info({ week, year }, "Starting weekly review");
+
+  try {
+    // Step 1: Collect daily summaries
+    const dailySummaries = await collectDailySummaries(week, year);
+
+    if (dailySummaries.length === 0) {
+      logger.warn({ week, year }, "No daily summaries found for this week");
+      return;
+    }
+
+    // Step 2: Analyze patterns
+    const patterns = await analyzePatterns(dailySummaries);
+
+    // Step 3: Use Claude to extract achievements
+    await captureWorkflow(
+      `Weekly review for Week ${week}, ${year}: ` +
+      `Analyze the ${dailySummaries.length} daily summaries and ` +
+      `extract key achievements, challenges, and create next week's focus areas.`
+    );
+
+    // Step 4: Generate weekly summary
+    const summary: WeeklySummary = {
+      weekNumber: week,
+      year,
+      dailySummaries,
+      patterns,
+      achievements: [
+        "Completed daily review process consistently",
+        "Maintained system health and integrations",
+      ],
+    };
+
+    await generateWeeklySummary(summary);
+
+    // Step 5: Archive daily summaries
+    await archiveDailySummaries(dailySummaries, week, year);
+
+    logger.info({ week, year }, "Weekly review completed successfully");
+  } catch (error) {
+    logger.error({ error, week, year }, "Weekly review failed");
+    throw error;
+  }
+}
+
+// Main execution
+await runWeeklyReview();

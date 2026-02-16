@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.metacogna.claude.weekly-review</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/nullzero/Library/Application Support/reflex/bun/bin/bun</string>
+        <string>run</string>
+        <string>review:weekly</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/nullzero/Metacogna/claude-obsidian-todoist-linear</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>/Users/nullzero</string>
+    </dict>
+
+    <!-- Run every Friday at 4:00 PM -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>5</integer>
+        <key>Hour</key>
+        <integer>16</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- Logging -->
+    <key>StandardOutPath</key>
+    <string>/tmp/claude-weekly-review.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/claude-weekly-review-error.log</string>
+
+    <key>KeepAlive</key>
+    <false/>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>LaunchOnlyOnce</key>
+    <false/>
+</dict>
+</plist>

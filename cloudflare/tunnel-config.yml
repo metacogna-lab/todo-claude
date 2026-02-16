@@ -1,0 +1,25 @@
+# Cloudflare Tunnel Configuration
+# This exposes the webhook server (localhost:4100) to external services
+
+tunnel: claude-hooks
+credentials-file: /Users/nullzero/.cloudflared/claude-hooks.json
+
+ingress:
+  # Route all traffic from hooks.metacogna.ai to local webhook server
+  - hostname: hooks.metacogna.ai
+    service: http://localhost:4100
+    originRequest:
+      connectTimeout: 30s
+      noTLSVerify: false
+
+  # Health check endpoint
+  - hostname: hooks.metacogna.ai
+    path: /health
+    service: http://localhost:4100
+
+  # Catch-all rule (required by cloudflared)
+  - service: http_status:404
+
+# Logging
+logDirectory: /tmp
+loglevel: info

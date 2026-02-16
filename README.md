@@ -53,6 +53,23 @@ bun run dev:api -- --port 4000
 
 Then query `http://localhost:4000/graphql` for tasks, health snapshots, or to run `captureThought` mutations.
 
+## Review Outputs Vault
+
+All review outputs written to Obsidian vault:
+```
+/Users/nullzero/Library/Mobile Documents/iCloud~md~obsidian/Documents/claude-summary
+```
+
+**Documentation**:
+- [CLAUDE.md](../claude-summary/CLAUDE.md) - Vault system guide
+- [QUICK_START.md](../claude-summary/QUICK_START.md) - 5-minute orientation
+- [REVIEW_PLAN.md](../claude-summary/REVIEW_PLAN.md) - Complete methodology
+
+**Outputs**:
+- Daily: `daily-summary/YYYY-MM-DD.md`
+- Weekly: `daily-summary/weekly-notes/YYYY-WWW.md`
+- Product: `product-reviews/YYYY-MM-product-review.md`
+
 Example mutation that goes end-to-end through Claude planning + execution:
 
 ```graphql

@@ -1,6 +1,6 @@
 import { httpJson } from "./http.js";
 
-const TODOIST_BASE = "https://api.todoist.com/rest/v2";
+const TODOIST_BASE = "https://api.todoist.com/api/v1";
 
 export type TodoistCreateTaskInput = {
   content: string;
@@ -18,6 +18,17 @@ export type TodoistTask = {
   content: string;
   description?: string;
   url?: string;
+  due?: {
+    date?: string;
+    datetime?: string;
+    string?: string;
+  };
+  priority?: number;
+  labels?: string[];
+};
+
+type TodoistTasksResponse = {
+  results: TodoistTask[];
 };
 
 export class TodoistClient {
@@ -30,5 +41,23 @@ export class TodoistClient {
       headers: { Authorization: `Bearer ${this.token}` },
       body: input,
     });
+  }
+
+  async getTasks(projectId?: string): Promise<TodoistTask[]> {
+    const url = projectId
+      ? `${TODOIST_BASE}/tasks?project_id=${projectId}`
+      : `${TODOIST_BASE}/tasks`;
+
+    const response = await httpJson<TodoistTasksResponse>({
+      method: "GET",
+      url,
+      headers: { Authorization: `Bearer ${this.token}` },
+    });
+
+    return response.results || [];
+  }
+
+  async getActiveTasks(): Promise<TodoistTask[]> {
+    return this.getTasks();
   }
 }
